@@ -20,6 +20,7 @@ Built natively in Swift using Apple's `AppKit`, `WebKit` (`WKWebView`), and Carb
 
 1. **Dedicated Native macOS Window for Google Gemini (`https://gemini.google.com/app`)**
    - Runs quietly as a menu bar utility (`LSUIElement`, zero Dock clutter) with persistent `WKWebsiteDataStore` storage so your Google account stays signed in across hides and restarts.
+   - **Zero-Black-Screen Instant Open**: Soft-hides using a click-through, shadowless `1pt` edge keep-alive + App Nap prevention + cached snapshot shield + background sleep-wake recovery so macOS `WebKit` never purges GPU `IOSurface` tiles or drops your live Gemini DOM even after hours idle.
 2. **Global `Option + Space` (`⌥ + Space`) Hotkey Anywhere on macOS**
    - Registered directly with the macOS WindowServer via Carbon `HIToolbox` (`RegisterEventHotKey`), working across every app, Space, and full-screen window **without requiring Accessibility permissions**.
 3. **3-State Focus, Translucency & Hide Cycle**

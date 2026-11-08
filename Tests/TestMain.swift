@@ -599,6 +599,107 @@ struct StickyAITestRunner {
             check(downloadErrors.isEmpty, "Zero download errors across all 5 download flows")
         }
 
+        runTest("9. Soft-hide keeps WKWebView GPU surface & DOM warm (no orderOut black screen) and auto-recovers terminated WebContent") {
+            let app = NSApplication.shared
+            app.setActivationPolicy(.accessory)
+
+            let tempDir = FileManager.default.temporaryDirectory
+                .appendingPathComponent("sticky-ai-keepalive-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: tempDir) }
+
+            let html = """
+            <!DOCTYPE html>
+            <html>
+            <body>
+              <div id="gemini-prompt" contenteditable="true" role="textbox">Live conversation state</div>
+              <script>
+                window.__bootToken = 'session-' + Math.random().toString(36).slice(2);
+              </script>
+            </body>
+            </html>
+            """
+            let htmlURL = tempDir.appendingPathComponent("keepalive.html")
+            try html.write(to: htmlURL, atomically: true, encoding: .utf8)
+
+            let store = ConfigStore(directoryURL: tempDir)
+            let customFrame = CGRect(x: 180, y: 140, width: 460, height: 590)
+            store.setWindowFrame(customFrame)
+
+            let controller = StickyAppController(
+                configStore: store,
+                websiteDataStore: .nonPersistent(),
+                initialURL: htmlURL,
+                enableStatusItem: false,
+                registerGlobalHotKey: false
+            )
+            defer { controller.panel.close() }
+
+            controller.start()
+            let loadDeadline = Date().addingTimeInterval(3.0)
+            while Date() < loadDeadline {
+                spinRunLoop(0.05)
+                if evaluateString(controller.webView, "window.__bootToken || ''")?.hasPrefix("session-") == true {
+                    break
+                }
+            }
+
+            let initialBootToken = evaluateString(controller.webView, "window.__bootToken || ''") ?? ""
+            check(!initialBootToken.isEmpty, "Captured initial DOM boot token")
+            let visibleFrameBeforeHide = controller.panel.frame
+
+            // Soft-hide window
+            controller.hideWindow()
+            spinRunLoop(0.15)
+
+            check(!controller.isWindowVisible, "Controller reports logically hidden")
+            check(controller.panel.isVisible, "Underlying NSPanel stays ordered-in so WebKit never purges GPU tiles")
+            check(controller.panel.ignoresMouseEvents, "Parked hidden panel is 100% click-through")
+            check(!controller.panel.canBecomeKey, "Parked hidden panel cannot steal keyboard focus")
+            check(!controller.panel.hasShadow, "Parked hidden panel casts zero shadow")
+            check(controller.panel.frame.size == visibleFrameBeforeHide.size, "Viewport width x height stays identical while hidden")
+            if !NSScreen.screens.isEmpty {
+                check(controller.panel.occlusionState.contains(.visible), "WindowServer keeps occlusionState .visible to prevent WebKit suspension")
+            }
+            check(
+                evaluateString(controller.webView, "document.visibilityState") == "visible",
+                "WebKit WebContent process keeps document.visibilityState == 'visible' while soft-hidden"
+            )
+
+            // Re-open via Option+Space: exact frame restored, exact same live JS/DOM instance (zero reload / zero black flash)
+            let act = controller.handleOptionSpaceHotkey()
+            check(act == .showAndFocus, "Option+Space from hidden triggers showAndFocus")
+            spinRunLoop(0.15)
+
+            check(controller.isWindowVisible, "Controller visible again")
+            check(!controller.panel.ignoresMouseEvents, "Mouse interaction restored")
+            check(controller.panel.canBecomeKey, "Key focus capability restored")
+            check(controller.panel.hasShadow, "Shadow restored")
+            check(controller.panel.frame == visibleFrameBeforeHide, "Exact visible window position & size restored")
+            check(
+                evaluateString(controller.webView, "window.__bootToken || ''") == initialBootToken,
+                "Exact live DOM & JS heap preserved without re-rendering page"
+            )
+
+            // Simulate OS-level WebContent termination while hidden -> auto-recovers in background
+            controller.hideWindow()
+            spinRunLoop(0.1)
+            controller.webViewWebContentProcessDidTerminate(controller.webView)
+            check(controller.processTerminationRecoveryCount == 1, "Recorded background WebContent termination recovery")
+
+            let recoverDeadline = Date().addingTimeInterval(3.0)
+            while Date() < recoverDeadline {
+                spinRunLoop(0.05)
+                if evaluateString(controller.webView, "document.getElementById('gemini-prompt') ? 'READY' : ''") == "READY" {
+                    break
+                }
+            }
+            check(
+                evaluateString(controller.webView, "document.getElementById('gemini-prompt') ? 'READY' : ''") == "READY",
+                "WebContent reloaded silently in background while hidden so next open is already rendered"
+            )
+        }
+
         print("\nResults: \(passedCount) passed, \(failedCount) failed")
         exit(failedCount == 0 ? 0 : 1)
     }

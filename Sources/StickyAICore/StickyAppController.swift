@@ -2,8 +2,16 @@ import AppKit
 import WebKit
 
 public final class StickyPanel: NSPanel {
-    public override var canBecomeKey: Bool { true }
-    public override var canBecomeMain: Bool { true }
+    public var allowBecomingKey: Bool = true
+    public override var canBecomeKey: Bool { allowBecomingKey }
+    public override var canBecomeMain: Bool { allowBecomingKey }
+
+    /// Always report `.visible` while the panel is ordered-in so Apple WebKit (`WKWebView`)
+    /// never purges GPU `IOSurface` tiles or suspends/evicts the `WebContent` process when
+    /// Sticky-AI is soft-hidden, behind another Space, or across display sleep.
+    public override var occlusionState: NSWindow.OcclusionState {
+        isVisible ? [.visible] : super.occlusionState
+    }
 }
 
 public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
@@ -12,6 +20,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     public let panel: StickyPanel
     public let webView: WKWebView
     public private(set) var hotKeyManager: HotKeyManager!
+    public private(set) var processTerminationRecoveryCount: Int = 0
     public var onDownloadFinished: ((URL) -> Void)?
     public var onDownloadFailed: ((Error) -> Void)?
 
@@ -21,14 +30,32 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         weak var temporaryPopupWebView: WKWebView?
     }
 
+    /// Tiny non-zero alpha used while parked on a 1x1 corner pixel so WindowServer keeps the
+    /// backing surface allocated while remaining 100% invisible to the user.
+    private static let parkedKeepAliveAlpha: CGFloat = 0.005
+
+    private let contentContainerView: NSView
+    private let snapshotShieldView: NSImageView
+    private var lastSnapshotImage: NSImage?
+    private var lastCommittedURL: URL?
+    private var lastVisibleFrame: CGRect
+
     private var statusItem: NSStatusItem?
     private var childWindows: [ObjectIdentifier: NSPanel] = [:]
     private var committedChildWebViews: Set<ObjectIdentifier> = []
     private var activeDownloads: [ObjectIdentifier: ActiveDownloadContext] = [:]
     private var previousExternalApp: NSRunningApplication?
     private var workspaceObserver: NSObjectProtocol?
+    private var wakeObserver: NSObjectProtocol?
+    private var screenWakeObserver: NSObjectProtocol?
+    private var screenParamsObserver: NSObjectProtocol?
+    private var appNapActivity: NSObjectProtocol?
+    private var keepAliveTimer: Timer?
+
     private var isQuitting = false
     private var isHiding = false
+    private var isLogicallyHidden = false
+    private var isTransitioningVisibility = false
     private let initialURL: URL
 
     public init(
@@ -41,6 +68,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     ) {
         self.configStore = configStore
         self.initialURL = initialURL
+        self.lastCommittedURL = initialURL
         self.downloadsDirectoryURL = DownloadHelper.defaultDownloadsDirectory(override: downloadsDirectoryURL)
 
         let screens = NSScreen.screens.map(\.visibleFrame)
@@ -51,6 +79,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
             visibleScreenFrames: screens,
             primaryVisibleFrame: primaryFrame
         )
+        self.lastVisibleFrame = startFrame
 
         self.panel = StickyPanel(
             contentRect: startFrame,
@@ -59,25 +88,45 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
             defer: false
         )
 
+        let containerRect = CGRect(origin: .zero, size: startFrame.size)
+        self.contentContainerView = NSView(frame: containerRect)
+        self.contentContainerView.autoresizingMask = [.width, .height]
+
         let webConfig = WKWebViewConfiguration()
         webConfig.websiteDataStore = websiteDataStore
         webConfig.preferences.javaScriptCanOpenWindowsAutomatically = true
 
-        self.webView = WKWebView(frame: CGRect(origin: .zero, size: startFrame.size), configuration: webConfig)
+        self.webView = WKWebView(frame: containerRect, configuration: webConfig)
         self.webView.customUserAgent = StickyConstants.safariUserAgent
         self.webView.autoresizingMask = [.width, .height]
         if #available(macOS 13.3, *) {
             self.webView.isInspectable = true
         }
 
+        self.snapshotShieldView = NSImageView(frame: containerRect)
+        self.snapshotShieldView.autoresizingMask = [.width, .height]
+        self.snapshotShieldView.imageScaling = .scaleAxesIndependently
+        self.snapshotShieldView.isHidden = true
+
+        self.contentContainerView.addSubview(self.webView)
+        self.contentContainerView.addSubview(self.snapshotShieldView)
+
         super.init()
+
+        // Prevent macOS App Nap from suspending Sticky-AI or starving WebKit XPC processes while idle,
+        // while still allowing normal idle system sleep when the Mac is unused.
+        self.appNapActivity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep],
+            reason: "Keep Sticky-AI Google Gemini WebView warm for instant Option+Space open"
+        )
 
         configurePanel()
         self.webView.navigationDelegate = self
         self.webView.uiDelegate = self
-        self.panel.contentView = self.webView
+        self.panel.contentView = self.contentContainerView
 
-        observeExternalActiveApp()
+        observeExternalActiveAppAndSystemWake()
+        startWebContentKeepAliveTimer()
         setupMainMenu()
 
         if enableStatusItem {
@@ -93,8 +142,22 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     }
 
     deinit {
+        keepAliveTimer?.invalidate()
+        if let appNapActivity {
+            ProcessInfo.processInfo.endActivity(appNapActivity)
+        }
+        let wsCenter = NSWorkspace.shared.notificationCenter
         if let workspaceObserver {
-            NSWorkspace.shared.notificationCenter.removeObserver(workspaceObserver)
+            wsCenter.removeObserver(workspaceObserver)
+        }
+        if let wakeObserver {
+            wsCenter.removeObserver(wakeObserver)
+        }
+        if let screenWakeObserver {
+            wsCenter.removeObserver(screenWakeObserver)
+        }
+        if let screenParamsObserver {
+            NotificationCenter.default.removeObserver(screenParamsObserver)
         }
         hotKeyManager?.unregister()
     }
@@ -112,14 +175,15 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         panel.delegate = self
     }
 
-    private func observeExternalActiveApp() {
+    private func observeExternalActiveAppAndSystemWake() {
         let myPID = ProcessInfo.processInfo.processIdentifier
         if let front = NSWorkspace.shared.frontmostApplication,
            front.processIdentifier != myPID {
             previousExternalApp = front
         }
 
-        workspaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
+        let wsCenter = NSWorkspace.shared.notificationCenter
+        workspaceObserver = wsCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil,
             queue: .main
@@ -131,6 +195,94 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
             }
             self.previousExternalApp = app
         }
+
+        wakeObserver = wsCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.warmUpWebViewAfterIdleOrWake()
+        }
+
+        screenWakeObserver = wsCenter.addObserver(
+            forName: NSWorkspace.screensDidWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.warmUpWebViewAfterIdleOrWake()
+        }
+
+        screenParamsObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self, self.isLogicallyHidden else { return }
+            self.repositionParkedPanel()
+        }
+    }
+
+    private func startWebContentKeepAliveTimer() {
+        keepAliveTimer = Timer.scheduledTimer(withTimeInterval: 45.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.warmUpWebViewAfterIdleOrWake()
+        }
+        keepAliveTimer?.tolerance = 10.0
+    }
+
+    /// Ensures the WKWebView WebContent & GPU processes remain warm and recovers silently in the
+    /// background if macOS ever terminated WebContent during deep sleep or extreme memory pressure.
+    private func warmUpWebViewAfterIdleOrWake() {
+        if webView.url == nil && !webView.isLoading {
+            showSnapshotShieldIfAvailable()
+            webView.load(URLRequest(url: lastCommittedURL ?? initialURL))
+            return
+        }
+        webView.evaluateJavaScript("void 0", completionHandler: nil)
+    }
+
+    private func captureSnapshotForFallback() {
+        guard !webView.isLoading, webView.bounds.width > 10, webView.bounds.height > 10 else {
+            return
+        }
+        let config = WKSnapshotConfiguration()
+        config.afterScreenUpdates = false
+        webView.takeSnapshot(with: config) { [weak self] image, _ in
+            if let image {
+                self?.lastSnapshotImage = image
+            }
+        }
+    }
+
+    private func showSnapshotShieldIfAvailable() {
+        guard let lastSnapshotImage else { return }
+        snapshotShieldView.image = lastSnapshotImage
+        snapshotShieldView.isHidden = false
+    }
+
+    private func hideSnapshotShield() {
+        snapshotShieldView.isHidden = true
+    }
+
+    private func parkedHiddenFrame(preservingSize size: NSSize) -> CGRect {
+        let allScreens = NSScreen.screens
+        if let rightmost = allScreens.max(by: { $0.frame.maxX < $1.frame.maxX }) {
+            let rf = rightmost.frame
+            return CGRect(
+                x: rf.maxX - 1.0,
+                y: rf.minY - size.height + 1.0,
+                width: size.width,
+                height: size.height
+            )
+        }
+        return CGRect(x: 1439.0, y: -size.height + 1.0, width: size.width, height: size.height)
+    }
+
+    private func repositionParkedPanel() {
+        isTransitioningVisibility = true
+        let parked = parkedHiddenFrame(preservingSize: lastVisibleFrame.size)
+        panel.setFrame(parked, display: true, animate: false)
+        isTransitioningVisibility = false
     }
 
     public func start() {
@@ -139,15 +291,18 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     }
 
     public var isWindowVisible: Bool {
-        panel.isVisible
+        panel.isVisible && !isLogicallyHidden
     }
 
     public var isWindowFocused: Bool {
-        panel.isVisible && panel.isKeyWindow
+        isWindowVisible && panel.isKeyWindow
     }
 
     public var currentAlpha: Double {
-        (Double(panel.alphaValue) * 100.0).rounded() / 100.0
+        if isLogicallyHidden {
+            return 0.0
+        }
+        return (Double(panel.alphaValue) * 100.0).rounded() / 100.0
     }
 
     // MARK: - Option+Space State Machine
@@ -171,10 +326,46 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         return action
     }
 
-    public func showAndFocusWindow(focusInput: Bool = true, completion: (() -> Void)? = nil) {
+    public func showAndFocusWindow(
+        focusInput: Bool = true,
+        overrideFrame: CGRect? = nil,
+        completion: (() -> Void)? = nil
+    ) {
+        let wasLogicallyHidden = isLogicallyHidden
+        isTransitioningVisibility = true
         isHiding = false
+        isLogicallyHidden = false
+
+        let targetFrame: CGRect
+        if let overrideFrame {
+            targetFrame = overrideFrame
+        } else if wasLogicallyHidden {
+            let screens = NSScreen.screens.map(\.visibleFrame)
+            let primaryFrame = NSScreen.main?.visibleFrame
+                ?? screens.first
+                ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+            targetFrame = configStore.resolvedWindowFrame(
+                visibleScreenFrames: screens,
+                primaryVisibleFrame: primaryFrame
+            )
+        } else {
+            targetFrame = panel.frame
+        }
+        lastVisibleFrame = targetFrame
+
+        panel.allowBecomingKey = true
+        panel.ignoresMouseEvents = false
+        panel.hasShadow = true
+        panel.isExcludedFromWindowsMenu = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+
+        if panel.frame != targetFrame {
+            panel.setFrame(targetFrame, display: true, animate: false)
+        }
+
         panel.alphaValue = CGFloat(StickyConstants.focusedAlpha)
         panel.level = .floating
+        isTransitioningVisibility = false
 
         if #available(macOS 14.0, *) {
             NSApp.activate()
@@ -183,6 +374,11 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         }
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
+
+        if webView.url == nil && !webView.isLoading {
+            showSnapshotShieldIfAvailable()
+            webView.load(URLRequest(url: lastCommittedURL ?? initialURL))
+        }
 
         if focusInput {
             FocusInput.focusMessageInput(in: webView, in: panel) { _ in
@@ -193,10 +389,33 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         }
     }
 
+    /// Soft-hides Sticky-AI without calling `panel.orderOut(nil)` or `NSApp.hide(nil)`.
+    /// Keeping a 1pt click-through edge strip ordered in at near-zero alpha keeps WindowServer
+    /// occlusion `.visible`, so WebKit retains its GPU IOSurfaces and live DOM indefinitely —
+    /// opening instantly with zero black flash even hours later.
     public func hideWindow() {
+        if !isLogicallyHidden {
+            lastVisibleFrame = panel.frame
+            configStore.setWindowFrame(panel.frame)
+            captureSnapshotForFallback()
+        }
+
+        isTransitioningVisibility = true
         isHiding = true
-        configStore.setWindowFrame(panel.frame)
-        panel.orderOut(nil)
+        isLogicallyHidden = true
+
+        panel.allowBecomingKey = false
+        panel.ignoresMouseEvents = true
+        panel.hasShadow = false
+        panel.isExcludedFromWindowsMenu = true
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        panel.alphaValue = Self.parkedKeepAliveAlpha
+
+        let parked = parkedHiddenFrame(preservingSize: lastVisibleFrame.size)
+        panel.setFrame(parked, display: true, animate: false)
+        panel.orderFrontRegardless()
+        panel.resignKey()
+        isTransitioningVisibility = false
 
         if let prev = previousExternalApp, !prev.isTerminated {
             if #available(macOS 14.0, *) {
@@ -204,8 +423,15 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
             } else {
                 prev.activate(options: [.activateIgnoringOtherApps])
             }
+        } else if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first,
+                  !finder.isTerminated {
+            if #available(macOS 14.0, *) {
+                finder.activate()
+            } else {
+                finder.activate(options: [.activateIgnoringOtherApps])
+            }
         } else {
-            NSApp.hide(nil)
+            NSApp.deactivate()
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
@@ -214,6 +440,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     }
 
     public func syncOpacity() {
+        guard isWindowVisible else { return }
         let target = getTargetAlpha(
             isFocused: isWindowFocused,
             unfocusedAlpha: configStore.unfocusedAlpha
@@ -225,13 +452,14 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
 
     public func windowDidBecomeKey(_ notification: Notification) {
         guard (notification.object as? NSWindow) === panel else { return }
+        guard !isLogicallyHidden, !isTransitioningVisibility else { return }
         panel.alphaValue = CGFloat(StickyConstants.focusedAlpha)
         panel.level = .floating
     }
 
     public func windowDidResignKey(_ notification: Notification) {
         guard (notification.object as? NSWindow) === panel else { return }
-        guard !isQuitting, !isHiding, panel.isVisible else { return }
+        guard !isQuitting, !isHiding, !isLogicallyHidden, !isTransitioningVisibility, panel.isVisible else { return }
         let target = getTargetAlpha(
             isFocused: false,
             unfocusedAlpha: configStore.unfocusedAlpha
@@ -242,11 +470,15 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
 
     public func windowDidMove(_ notification: Notification) {
         guard (notification.object as? NSWindow) === panel else { return }
+        guard !isLogicallyHidden, !isTransitioningVisibility else { return }
+        lastVisibleFrame = panel.frame
         configStore.setWindowFrame(panel.frame)
     }
 
     public func windowDidResize(_ notification: Notification) {
         guard (notification.object as? NSWindow) === panel else { return }
+        guard !isLogicallyHidden, !isTransitioningVisibility else { return }
+        lastVisibleFrame = panel.frame
         configStore.setWindowFrame(panel.frame)
     }
 
@@ -294,15 +526,58 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     }
 
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-        if webView !== self.webView {
+        if webView === self.webView {
+            if let currentURL = webView.url {
+                lastCommittedURL = currentURL
+            }
+        } else {
             committedChildWebViews.insert(ObjectIdentifier(webView))
         }
     }
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         guard webView === self.webView else { return }
+        if let currentURL = webView.url {
+            lastCommittedURL = currentURL
+        }
+        hideSnapshotShield()
+        captureSnapshotForFallback()
         if isWindowVisible && currentAlpha > 0.9 {
             FocusInput.focusMessageInput(in: self.webView, in: panel)
+        }
+    }
+
+    public func webView(
+        _ webView: WKWebView,
+        didFail navigation: WKNavigation!,
+        withError error: Error
+    ) {
+        guard webView === self.webView else { return }
+        hideSnapshotShield()
+    }
+
+    public func webView(
+        _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: Error
+    ) {
+        guard webView === self.webView else { return }
+        hideSnapshotShield()
+    }
+
+    /// Automatically recovers in the background if macOS ever kills the WebKit WebContent process
+    /// under extreme kernel memory pressure, displaying the cached snapshot shield instead of black.
+    public func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        guard webView === self.webView else {
+            closeChildPopup(for: webView)
+            return
+        }
+        processTerminationRecoveryCount += 1
+        showSnapshotShieldIfAvailable()
+        if webView.url != nil {
+            webView.reload()
+        } else {
+            webView.load(URLRequest(url: lastCommittedURL ?? initialURL))
         }
     }
 
@@ -619,8 +894,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
             visibleScreenFrames: screens,
             primaryVisibleFrame: primaryFrame
         )
-        panel.setFrame(freshFrame, display: true, animate: true)
-        showAndFocusWindow(focusInput: true)
+        showAndFocusWindow(focusInput: true, overrideFrame: freshFrame)
     }
 
     @objc private func menuSelectAlpha(_ sender: NSMenuItem) {
@@ -636,7 +910,9 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
 
     @objc private func menuQuit() {
         isQuitting = true
-        configStore.setWindowFrame(panel.frame)
+        if !isLogicallyHidden {
+            configStore.setWindowFrame(panel.frame)
+        }
         NSApp.terminate(nil)
     }
 }
