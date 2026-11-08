@@ -1,0 +1,8 @@
+.build/
+.swiftpm/
+Sticky-AI.app/
+Sticky AI.app/
+node_modules/
+.env
+*.log
+.DS_Store

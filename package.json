@@ -1,0 +1,36 @@
+{
+  "name": "sticky-ai",
+  "version": "2.0.0",
+  "description": "Open-source native macOS software for Google Gemini — always-on-top floating Gemini window toggled anywhere on macOS with Option+Space",
+  "license": "MIT",
+  "author": "DOMONK Factory (https://domonk.com)",
+  "homepage": "https://github.com/madmicrowave/sticky-ai#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/madmicrowave/sticky-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/madmicrowave/sticky-ai/issues"
+  },
+  "os": [
+    "darwin"
+  ],
+  "scripts": {
+    "start": "[ -d ./Sticky-AI.app ] || zsh scripts/build-app.sh; open ./Sticky-AI.app",
+    "build:app": "zsh scripts/build-app.sh",
+    "test": "zsh scripts/run-tests.sh"
+  },
+  "keywords": [
+    "macos",
+    "google-gemini",
+    "gemini",
+    "swift",
+    "appkit",
+    "webkit",
+    "floating-window",
+    "always-on-top",
+    "option-space",
+    "sticky-ai",
+    "domonk"
+  ]
+}
