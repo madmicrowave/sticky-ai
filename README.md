@@ -168,7 +168,7 @@ zsh scripts/run-tests.sh
 
 ## More Open-Source macOS AI Tools by DOMONK Factory
 
-- **[MAC — Mobile Agent Control (`mobile-agent-control`)](https://github.com/madmicrowave/mobile-agent-control)** — Native macOS menu bar app (`MAC.app`) to control local **Google Antigravity (`agy`)** coding Workspaces (Google Gemini & Claude Opus), commit/branch Git changes, and promote Staging → Production Jenkins CI/CD deployments directly from **Telegram** on your phone.
+- **[Mobile Agent Control (`mobile-agent-control` — `mac.app`)](https://github.com/madmicrowave/mobile-agent-control)** — Native macOS menu bar app (`MAC` badge next to your clock) with 2-minute visual setup to remotely control all your local **Google Antigravity (`agy`)** coding Workspaces (Google Gemini & Claude), commit/branch Git changes, and promote Staging → Production Jenkins CI/CD deployments from **Telegram**.
 
 If **Sticky-AI** speeds up your daily macOS workflow, please consider giving the repository a **⭐️ Star on GitHub** so other Mac developers can discover it!
 
