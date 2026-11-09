@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./assets/banner.svg" alt="Sticky-AI (sticky-ai.app / SAI) — Open-Source Native Google Gemini Desktop &amp; Menu Bar Application for macOS" width="100%" />
+<img src="./assets/banner.png" alt="Sticky-AI (sticky-ai.app / SAI) — Open-Source Native Google Gemini Desktop &amp; Menu Bar Application for macOS" width="100%" />
 
 # Sticky-AI (`sticky-ai.app` / `SAI`) — Native Google Gemini Desktop & Menu Bar App for macOS
 
@@ -155,7 +155,7 @@ sticky-ai/
 │   ├── build-app.sh                           # Standalone `sticky-ai.app` builder & ad-hoc codesigner
 │   └── run-tests.sh                           # Compiles & runs automated Swift test suite
 ├── assets/
-│   └── banner.svg                             # Project hero preview
+│   └── banner.png                             # Project hero preview
 └── LICENSE                                    # MIT License
 ```
 
