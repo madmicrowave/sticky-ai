@@ -1,0 +1,12 @@
+name: Feature Request
+description: Suggest an enhancement or feature for Sticky-AI
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Feature Description
+      description: What capability or shortcut would make Sticky-AI even more useful on macOS?
+    validations:
+      required: true

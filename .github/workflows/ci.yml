@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    name: macOS Swift Build & Tests
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run automated Swift test suite
+        run: zsh scripts/run-tests.sh
+
+      - name: Build Sticky-AI.app bundle
+        run: zsh scripts/build-app.sh

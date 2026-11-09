@@ -1,0 +1,19 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Sticky-AI on macOS
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: macos
+    attributes:
+      label: macOS Version & Chip
+      placeholder: "e.g. macOS 15.2 Sequoia (Apple M3 Pro)"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the issue and steps to reproduce it.
+    validations:
+      required: true

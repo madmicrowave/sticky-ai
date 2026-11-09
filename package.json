@@ -1,7 +1,7 @@
 {
   "name": "sticky-ai",
   "version": "2.0.0",
-  "description": "Open-source native macOS software for Google Gemini — always-on-top floating Gemini window toggled anywhere on macOS with Option+Space",
+  "description": "Native macOS desktop & menu bar app for Google Gemini — summon an always-on-top floating Gemini window anywhere on Mac with Option+Space (Swift, zero Electron overhead)",
   "license": "MIT",
   "author": "DOMONK Factory (https://domonk.com)",
   "homepage": "https://github.com/madmicrowave/sticky-ai#readme",
@@ -22,13 +22,19 @@
   },
   "keywords": [
     "macos",
+    "macos-app",
+    "menubar-app",
     "google-gemini",
     "gemini",
+    "gemini-desktop",
+    "gemini-mac-app",
+    "ai-assistant",
     "swift",
     "appkit",
     "webkit",
     "floating-window",
     "always-on-top",
+    "spotlight-alternative",
     "option-space",
     "sticky-ai",
     "domonk"

@@ -1,0 +1,32 @@
+name: Release macOS App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Sticky-AI.app
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run automated tests
+        run: zsh scripts/run-tests.sh
+
+      - name: Build Sticky-AI.app
+        run: zsh scripts/build-app.sh
+
+      - name: Package Sticky-AI-macOS.zip
+        run: ditto -c -k --sequesterRsrc --keepParent Sticky-AI.app Sticky-AI-macOS.zip
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Sticky-AI-macOS.zip
+          generate_release_notes: true
