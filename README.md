@@ -1,33 +1,34 @@
 <div align="center">
 
-<img src="./assets/banner.svg" alt="Sticky-AI — Native Google Gemini Desktop &amp; Menu Bar App for macOS" width="100%" />
+<img src="./assets/banner.svg" alt="Sticky-AI (Sticky-AI.app / SAI) — Open-Source Native Google Gemini Desktop &amp; Menu Bar Application for macOS" width="100%" />
 
-# Sticky-AI — Native Google Gemini Desktop & Menu Bar App for macOS
+# Sticky-AI (`Sticky-AI.app` / `SAI`) — Native Google Gemini Desktop & Menu Bar App for macOS
 
-**Summon an always-on-top floating Google Gemini assistant anywhere on macOS with `Option + Space` (`⌥ + Space`).**
+**Free, open-source native Swift macOS application (`Sticky-AI.app`) that puts a crisp `SAI` badge next to your clock and summons an always-on-top floating Google Gemini assistant anywhere on your Mac with `Option + Space` (`⌥ + Space`).**
 
 [![CI](https://github.com/madmicrowave/sticky-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/madmicrowave/sticky-ai/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/madmicrowave/sticky-ai?label=Download%20Sticky-AI.app&logo=apple)](https://github.com/madmicrowave/sticky-ai/releases/latest)
 [![Platform: macOS 13+](https://img.shields.io/badge/Platform-macOS%2013%2B%20(Apple%20Silicon%20%26%20Intel)-000000?logo=apple&logoColor=white)](https://github.com/madmicrowave/sticky-ai)
 [![AI: Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
-[![Built with Swift](https://img.shields.io/badge/Built%20with-Swift%205.10-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Built with Swift](https://img.shields.io/badge/Built%20with-Native%20Swift-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](./LICENSE)
 [![Powered by DOMONK Factory](https://img.shields.io/badge/Powered%20by-DOMONK%20Factory-7c3aed)](https://domonk.com)
 
-[**Quick Install**](#installation--quick-start) • [**Why Sticky-AI?**](#why-sticky-ai) • [**Shortcuts**](#keyboard-shortcuts--menu-bar-controls) • [**FAQ**](#frequently-asked-questions-faq) • [**DOMONK Factory**](https://domonk.com)
+[**Download `Sticky-AI.app`**](https://github.com/madmicrowave/sticky-ai/releases/latest) • [**Why Sticky-AI?**](#why-sticky-ai) • [**Key Features**](#key-features) • [**Shortcuts & Menu Bar**](#keyboard-shortcuts--menu-bar-controls) • [**FAQ**](#frequently-asked-questions-faq) • [**DOMONK Factory**](https://domonk.com)
 
 </div>
 
 ---
 
-**Sticky-AI** is a lightweight, zero-dependency, **native macOS desktop and menu bar app for Google Gemini** (`https://gemini.google.com/app`), open-sourced under the MIT License by **[DOMONK Factory](https://domonk.com)**.
+**Sticky-AI (`Sticky-AI.app`)** is a lightweight, zero-dependency, **native macOS desktop and menu bar application for Google Gemini** (`https://gemini.google.com/app`), open-sourced under the MIT License by **[DOMONK Factory](https://domonk.com)**.
 
-Press **`Option + Space` (`⌥ + Space`)** from **anywhere on your Mac** — over Xcode, VS Code, Antigravity IDE, Terminal, Desktop Spaces, or full-screen apps — to toggle a compact floating Google Gemini window with instant prompt auto-focus, smart `60%` translucency while unfocused, native Google Passkey/OAuth sign-in, and one-click file downloads to `~/Downloads`.
+Press **`Option + Space` (`⌥ + Space`)** from **anywhere on macOS** — over Xcode, VS Code, Google Antigravity IDE, Terminal, Desktop Spaces, or full-screen apps — to toggle a compact floating Google Gemini panel with instant prompt auto-focus, smart `60%` glass translucency while unfocused, native Google Passkey/OAuth sign-in, and one-click file downloads to `~/Downloads`.
 
 ---
 
 ## Why Sticky-AI?
 
-| Capability | Sticky-AI (Native Swift) | Browser Tab | Electron / CEF Wrappers |
+| Capability | Sticky-AI (`Sticky-AI.app` — Native Swift) | Browser Tab | Electron / CEF Wrappers |
 | :--- | :--- | :--- | :--- |
 | **Global `Option + Space` Shortcut** | ✅ Instant across all Spaces & fullscreen apps | ❌ Must hunt tabs/windows | ⚠️ Often requires Accessibility permissions |
 | **Google Account Sign-In & Passkeys** | ✅ Native Apple `WKWebView` (never blocked) | ✅ Works | ❌ Frequently blocked by Google security check |
@@ -39,14 +40,14 @@ Press **`Option + Space` (`⌥ + Space`)** from **anywhere on your Mac** — ove
 
 ## Key Features
 
-1. **Dedicated Native macOS Window for Google Gemini (`https://gemini.google.com/app`)**
-   - Lives quietly in the macOS menu bar (`LSUIElement`, zero `Cmd + Tab` or Dock clutter) with persistent `WKWebsiteDataStore` storage so your Google account stays signed in across hides and reboots.
+1. **Dedicated Native macOS Application for Google Gemini (`https://gemini.google.com/app`)**
+   - Lives quietly next to your macOS clock as **`SAI`** (`LSUIElement`, zero `Cmd + Tab` or Dock clutter) with persistent `WKWebsiteDataStore` storage so your Google account stays signed in across hides and reboots.
    - **Zero-Black-Screen Instant Open**: Soft-hides using a click-through, shadowless `1pt` edge keep-alive + App Nap prevention + cached snapshot shield + sleep-wake recovery so macOS `WebKit` never purges GPU `IOSurface` tiles or drops your live Gemini DOM even after hours idle.
 2. **Global `Option + Space` (`⌥ + Space`) Hotkey Anywhere on macOS**
    - Registered directly with the macOS WindowServer via Carbon `HIToolbox` (`RegisterEventHotKey`), working across every app, Desktop Space, and full-screen window **without requiring Accessibility permissions**.
 3. **3-State Focus, Translucency & Hide Cycle**
    - **Hidden + `Option + Space`** → Appears **on top of all windows**, activates Sticky-AI at **`100%` opacity**, and **auto-focuses the Google Gemini prompt input** ready to type.
-   - **Visible & Unfocused** → Remains pinned **on top of all windows** at configurable translucency (**`60%` opacity / `40%` transparent** by default) so you can read code or docs behind Gemini's answer.
+   - **Visible & Unfocused** → Remains pinned **on top of all windows** at configurable translucency (**`60%` opacity / `40%` transparent** by default) so you can read code or docs right through Gemini's answer.
    - **Visible & Unfocused + `Option + Space`** (or mouse click) → Restores **`100%` opacity** and focuses the Google Gemini message input.
    - **Visible & Focused + `Option + Space`** → **Hides Sticky-AI** immediately and restores keyboard focus to the exact external app you were using before.
 4. **Compact, Movable & Multi-Display Aware**
@@ -61,7 +62,7 @@ Press **`Option + Space` (`⌥ + Space`)** from **anywhere on your Mac** — ove
 
 ### Option A — Download Prebuilt `Sticky-AI.app` (macOS 13+)
 
-Check the [**GitHub Releases**](https://github.com/madmicrowave/sticky-ai/releases) page to download `Sticky-AI-macOS.zip`, unzip it, drag **`Sticky-AI.app`** into `/Applications`, and launch it.
+Download **`Sticky-AI-macOS.zip`** from [**GitHub Releases**](https://github.com/madmicrowave/sticky-ai/releases/latest), unzip it, drag **`Sticky-AI.app`** into `/Applications`, and double-click **`Sticky-AI.app`**.
 
 ### Option B — One-Command Build from Source (Xcode Command Line Tools)
 
@@ -90,7 +91,7 @@ git clone https://github.com/madmicrowave/sticky-ai.git && cd sticky-ai && zsh s
 
 ## Keyboard Shortcuts & Menu Bar Controls
 
-Click the **Sticky-AI** icon in the top-right macOS menu bar at any time:
+Click the **`SAI`** badge next to your macOS clock at any time:
 
 | Action | Shortcut / Menu Item |
 | :--- | :--- |
@@ -100,7 +101,7 @@ Click the **Sticky-AI** icon in the top-right macOS menu bar at any time:
 | **Reload Page** | `Cmd + R` |
 | **Reset Window Size & Position** | Menu Bar → *Reset Window Size & Position* |
 | **Unfocused Opacity Presets** | `80%`, `60% (Default)`, `40%`, `20%` |
-| **About (`DOMONK Factory`)** | Menu Bar → *About* (opens **DOMONK Factory** info & link to [https://domonk.com](https://domonk.com)) |
+| **About (`DOMONK Factory`)** | Menu Bar → *About* (opens **DOMONK Factory** panel with clickable link to [https://domonk.com](https://domonk.com)) |
 | **Quit Sticky-AI** | `Cmd + Q` |
 
 ### Optional Environment Overrides
@@ -115,7 +116,7 @@ Click the **Sticky-AI** icon in the top-right macOS menu bar at any time:
 <details>
 <summary><b>Is there a native Google Gemini desktop app for macOS?</b></summary>
 <br />
-Google does not currently ship a standalone native macOS desktop app for Gemini. <b>Sticky-AI</b> fills that gap with a tiny, 100% open-source native Swift (<code>AppKit</code> + <code>WebKit</code>) menu bar and Spotlight-style <code>Option + Space</code> floating window.
+Google does not currently ship a standalone native macOS desktop app for Gemini. <b>Sticky-AI (<code>Sticky-AI.app</code>)</b> fills that gap with a tiny, 100% open-source native Swift (<code>AppKit</code> + <code>WebKit</code>) menu bar and Spotlight-style <code>Option + Space</code> floating window.
 </details>
 
 <details>
@@ -139,7 +140,7 @@ sticky-ai/
 ├── Package.swift                              # Swift Package Manager manifest (macOS 13+)
 ├── Sources/
 │   ├── StickyAICore/
-│   │   ├── StickyAppController.swift          # Floating NSPanel, WKWebView session, OAuth popups & menu bar UI
+│   │   ├── StickyAppController.swift          # Floating NSPanel, WKWebView session, OAuth popups, About & menu bar UI
 │   │   ├── StateMachine.swift                 # 3-state Option+Space transition logic, opacity & ConfigStore
 │   │   ├── HotKeyManager.swift                # Carbon HIToolbox global Option+Space hotkey registration
 │   │   ├── FocusInput.swift                   # Resilient DOM prompt-input auto-focus & caret placement
@@ -160,16 +161,16 @@ sticky-ai/
 ## Running Automated Tests
 
 ```bash
-zsh scripts/run-tests.sh
+npm test
 ```
 
-*(Or `npm test`)* — Compiles `StickyAICore` with `Tests/TestMain.swift` and verifies the 3-state hotkey state machine, unfocused opacity clamping, multi-screen frame persistence, Google OAuth domain routing, filename sanitization, and collision-free `~/Downloads` resolution.
+Compiles `StickyAICore` with `Tests/TestMain.swift` and verifies the 3-state hotkey state machine, unfocused opacity clamping, multi-screen frame persistence, Google OAuth domain routing, filename sanitization, and collision-free `~/Downloads` resolution.
 
 ---
 
-## More Open-Source macOS AI Tools by DOMONK Factory
+## More Open-Source macOS AI Applications by DOMONK Factory
 
-- **[Mobile Agent Control (`mobile-agent-control` — `mac.app`)](https://github.com/madmicrowave/mobile-agent-control)** — Native macOS menu bar app (`MAC` badge next to your clock) with 2-minute visual setup to remotely control all your local **Google Antigravity (`agy`)** coding Workspaces (Google Gemini & Claude), commit/branch Git changes, and promote Staging → Production Jenkins CI/CD deployments from **Telegram**.
+- **[Mobile Agent Control (`mac.app` / `MAC`)](https://github.com/madmicrowave/mobile-agent-control)** — Free, open-source native Swift & SwiftUI macOS menu bar + Dock application (`MAC` badge next to your clock) with 2-minute visual setup to remotely control local **Google Antigravity (`agy`)** coding Workspaces (Google Gemini & Claude), commit & push single or multi-repo Git folders, and promote optional Staging → Production Jenkins CI/CD deployments from **Telegram**.
 
 If **Sticky-AI** speeds up your daily macOS workflow, please consider giving the repository a **⭐️ Star on GitHub** so other Mac developers can discover it!
 
