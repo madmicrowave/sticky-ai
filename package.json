@@ -1,7 +1,7 @@
 {
   "name": "sticky-ai",
-  "version": "2.1.0",
-  "description": "Sticky-AI (Sticky-AI.app / SAI) — Free open-source native Swift macOS desktop & menu bar application for Google Gemini. Summon an always-on-top floating Gemini assistant anywhere on Mac with Option+Space (zero Electron overhead)",
+  "version": "2.2.0",
+  "description": "Sticky-AI (sticky-ai.app / SAI) — Free open-source native Swift macOS desktop & menu bar application for Google Gemini with autostart at login. Summon an always-on-top floating Gemini assistant anywhere on Mac with Option+Space (zero Electron overhead)",
   "license": "MIT",
   "author": "DOMONK Factory (https://domonk.com)",
   "homepage": "https://github.com/madmicrowave/sticky-ai#readme",
@@ -16,7 +16,7 @@
     "darwin"
   ],
   "scripts": {
-    "start": "[ -d ./Sticky-AI.app ] || zsh scripts/build-app.sh; open ./Sticky-AI.app",
+    "start": "[ -d ./sticky-ai.app ] || zsh scripts/build-app.sh; open ./sticky-ai.app",
     "build:app": "zsh scripts/build-app.sh",
     "test": "zsh scripts/run-tests.sh"
   },

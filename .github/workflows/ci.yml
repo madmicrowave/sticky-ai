@@ -17,5 +17,5 @@ jobs:
       - name: Run automated Swift test suite
         run: zsh scripts/run-tests.sh
 
-      - name: Build Sticky-AI.app bundle
+      - name: Build sticky-ai.app bundle
         run: zsh scripts/build-app.sh

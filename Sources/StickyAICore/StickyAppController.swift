@@ -14,11 +14,12 @@ public final class StickyPanel: NSPanel {
     }
 }
 
-public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
+public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
     public static let domonkFactoryName = "DOMONK Factory"
     public static let domonkFactoryURL = URL(string: "https://domonk.com")!
 
     public let configStore: ConfigStore
+    public let launchAtLoginManager: LaunchAtLoginManager
     public let downloadsDirectoryURL: URL
     public let panel: StickyPanel
     public let webView: WKWebView
@@ -65,6 +66,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
 
     public init(
         configStore: ConfigStore = ConfigStore(),
+        launchAtLoginManager: LaunchAtLoginManager = LaunchAtLoginManager(),
         websiteDataStore: WKWebsiteDataStore = .default(),
         initialURL: URL = URL(string: StickyConstants.defaultGeminiURL)!,
         downloadsDirectoryURL: URL? = nil,
@@ -72,6 +74,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         registerGlobalHotKey: Bool = true
     ) {
         self.configStore = configStore
+        self.launchAtLoginManager = launchAtLoginManager
         self.initialURL = initialURL
         self.lastCommittedURL = initialURL
         self.downloadsDirectoryURL = DownloadHelper.defaultDownloadsDirectory(override: downloadsDirectoryURL)
@@ -135,6 +138,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         setupMainMenu()
 
         if enableStatusItem {
+            launchAtLoginManager.syncOnLaunch(configStore: configStore)
             setupStatusItem()
         }
 
@@ -776,10 +780,19 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         let appMenuItem = NSMenuItem()
         mainMenu.addItem(appMenuItem)
         let appMenu = NSMenu()
+        appMenu.delegate = self
         appMenuItem.submenu = appMenu
         appMenu.addItem(withTitle: "About Sticky-AI", action: #selector(menuAbout), keyEquivalent: "").target = self
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Toggle Sticky-AI (⌥Space)", action: #selector(menuToggle), keyEquivalent: "").target = self
+        let appLaunchItem = NSMenuItem(
+            title: "Start Automatically at Login",
+            action: #selector(menuToggleLaunchAtLogin),
+            keyEquivalent: ""
+        )
+        appLaunchItem.target = self
+        appLaunchItem.state = launchAtLoginManager.isEnabled ? .on : .off
+        appMenu.addItem(appLaunchItem)
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Hide Sticky-AI", action: #selector(menuHide), keyEquivalent: "h").target = self
         appMenu.addItem(.separator())
@@ -845,6 +858,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     @discardableResult
     public func buildStatusMenu() -> NSMenu {
         let menu = NSMenu()
+        menu.delegate = self
 
         menu.addItem(withTitle: "Toggle Sticky-AI (⌥Space)", action: #selector(menuToggle), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Focus Message Input", action: #selector(menuFocusInput), keyEquivalent: "").target = self
@@ -873,12 +887,45 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         menu.addItem(alphaParent)
 
         menu.addItem(.separator())
+
+        let launchItem = NSMenuItem(
+            title: "Start Automatically at Login",
+            action: #selector(menuToggleLaunchAtLogin),
+            keyEquivalent: ""
+        )
+        launchItem.target = self
+        launchItem.state = launchAtLoginManager.isEnabled ? .on : .off
+        menu.addItem(launchItem)
+
         menu.addItem(withTitle: "About", action: #selector(menuAbout), keyEquivalent: "").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Sticky-AI", action: #selector(menuQuit), keyEquivalent: "q").target = self
 
         self.statusMenu = menu
         return menu
+    }
+
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        for item in menu.items where item.action == #selector(menuToggleLaunchAtLogin) {
+            item.state = launchAtLoginManager.isEnabled ? .on : .off
+        }
+    }
+
+    @discardableResult
+    public func setLaunchAtLogin(_ enabled: Bool) -> Bool {
+        let updated = (try? launchAtLoginManager.setEnabled(enabled)) ?? launchAtLoginManager.isEnabled
+        configStore.launchAtLogin = updated
+        rebuildStatusMenu()
+        return updated
+    }
+
+    @discardableResult
+    public func toggleLaunchAtLogin() -> Bool {
+        setLaunchAtLogin(!launchAtLoginManager.isEnabled)
+    }
+
+    @objc private func menuToggleLaunchAtLogin() {
+        toggleLaunchAtLogin()
     }
 
     private func rebuildStatusMenu() {

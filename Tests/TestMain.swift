@@ -160,6 +160,7 @@ private func evaluateString(_ webView: WKWebView, _ js: String) -> String? {
 @main
 struct StickyAITestRunner {
     static func main() {
+        setenv("STICKY_AI_DISABLE_AUTO_LAUNCH_AGENT", "1", 1)
         print("Running Sticky-AI Test Suite...\n")
 
         runTest("1. Option+Space state machine transitions match all rules") {
@@ -623,11 +624,17 @@ struct StickyAITestRunner {
             try html.write(to: htmlURL, atomically: true, encoding: .utf8)
 
             let store = ConfigStore(directoryURL: tempDir)
+            let launchDir = tempDir.appendingPathComponent("LaunchAgents", isDirectory: true)
+            let launchMgr = LaunchAtLoginManager(
+                launchAgentsDirectory: launchDir,
+                executablePathProvider: { "/Applications/sticky-ai.app/Contents/MacOS/StickyAI" }
+            )
             let customFrame = CGRect(x: 180, y: 140, width: 460, height: 590)
             store.setWindowFrame(customFrame)
 
             let controller = StickyAppController(
                 configStore: store,
+                launchAtLoginManager: launchMgr,
                 websiteDataStore: .nonPersistent(),
                 initialURL: htmlURL,
                 enableStatusItem: false,
@@ -699,8 +706,43 @@ struct StickyAITestRunner {
                 "WebContent reloaded silently in background while hidden so next open is already rendered"
             )
 
-            // Verify Menu Bar Dropdown 'About' option opens DOMONK Factory window with https://domonk.com
-            let dropdownMenu = controller.buildStatusMenu()
+            // Verify Menu Bar Dropdown 'Start Automatically at Login' & 'About' options
+            var dropdownMenu = controller.buildStatusMenu()
+            let initialLaunchItem = dropdownMenu.items.first(where: { $0.title == "Start Automatically at Login" })
+            check(initialLaunchItem != nil, "Status menu bar dropdown contains 'Start Automatically at Login' item")
+            check(initialLaunchItem?.state == .off, "Launch at login initially off in isolated test directory")
+
+            // Enable autostart via toggleLaunchAtLogin()
+            let enabledNow = controller.toggleLaunchAtLogin()
+            check(enabledNow && launchMgr.isEnabled, "toggleLaunchAtLogin() creates LaunchAgent plist")
+            check(store.launchAtLogin == true, "ConfigStore persists launchAtLogin == true")
+            if let plistData = try? Data(contentsOf: launchMgr.plistURL),
+               let plist = try? PropertyListSerialization.propertyList(from: plistData, format: nil) as? [String: Any] {
+                check(plist["Label"] as? String == "com.domonk.sticky-ai", "LaunchAgent Label is com.domonk.sticky-ai")
+                check(plist["RunAtLoad"] as? Bool == true, "LaunchAgent RunAtLoad == true")
+                check(
+                    plist["ProgramArguments"] as? [String] == ["/Applications/sticky-ai.app/Contents/MacOS/StickyAI"],
+                    "LaunchAgent ProgramArguments points to sticky-ai.app binary"
+                )
+            } else {
+                check(false, "Expected valid XML LaunchAgent plist at \(launchMgr.plistURL.path)")
+            }
+            dropdownMenu = controller.buildStatusMenu()
+            check(
+                dropdownMenu.items.first(where: { $0.title == "Start Automatically at Login" })?.state == .on,
+                "Menu bar checkmark updates to .on when autostart is enabled"
+            )
+
+            // Disable autostart via toggleLaunchAtLogin()
+            let disabledNow = controller.toggleLaunchAtLogin()
+            check(!disabledNow && !launchMgr.isEnabled, "Second toggleLaunchAtLogin() removes LaunchAgent plist")
+            check(store.launchAtLogin == false, "ConfigStore persists launchAtLogin == false")
+            dropdownMenu = controller.buildStatusMenu()
+            check(
+                dropdownMenu.items.first(where: { $0.title == "Start Automatically at Login" })?.state == .off,
+                "Menu bar checkmark updates to .off when autostart is disabled"
+            )
+
             let aboutItem = dropdownMenu.items.first(where: { $0.title == "About" })
             check(aboutItem != nil, "Status menu bar dropdown contains 'About' item")
             controller.showAboutWindow()
@@ -711,6 +753,47 @@ struct StickyAITestRunner {
                 _ = controller.windowShouldClose(aboutWin)
             }
             check(controller.aboutWindow?.isVisible == false, "About window closes cleanly without quitting Sticky-AI")
+        }
+
+        runTest("10. LaunchAtLoginManager syncOnLaunch enables autostart by default on first run and respects saved false preference") {
+            let tempDir = FileManager.default.temporaryDirectory
+                .appendingPathComponent("sticky-ai-autostart-\(UUID().uuidString)", isDirectory: true)
+            defer { try? FileManager.default.removeItem(at: tempDir) }
+
+            let cfgDir = tempDir.appendingPathComponent("cfg", isDirectory: true)
+            let launchDir = tempDir.appendingPathComponent("LaunchAgents", isDirectory: true)
+            var currentExec = "/Users/test/code/sticky-ai/Sticky-AI.app/Contents/MacOS/StickyAI"
+            let mgr = LaunchAtLoginManager(
+                launchAgentsDirectory: launchDir,
+                executablePathProvider: { currentExec }
+            )
+            let store = ConfigStore(directoryURL: cfgDir)
+
+            unsetenv("STICKY_AI_DISABLE_AUTO_LAUNCH_AGENT")
+            defer { setenv("STICKY_AI_DISABLE_AUTO_LAUNCH_AGENT", "1", 1) }
+
+            // First launch with nil preference -> enables automatically
+            check(store.launchAtLogin == nil && !mgr.isEnabled, "Initially unconfigured")
+            mgr.syncOnLaunch(configStore: store)
+            check(mgr.isEnabled && store.launchAtLogin == true, "First launch enables LaunchAgent automatically")
+
+            // Simulate app rename/move to sticky-ai.app -> syncOnLaunch refreshes ProgramArguments path
+            currentExec = "/Applications/sticky-ai.app/Contents/MacOS/StickyAI"
+            mgr.syncOnLaunch(configStore: store)
+            if let data = try? Data(contentsOf: mgr.plistURL),
+               let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] {
+                check(
+                    plist["ProgramArguments"] as? [String] == ["/Applications/sticky-ai.app/Contents/MacOS/StickyAI"],
+                    "syncOnLaunch refreshes executable path after rename to sticky-ai.app"
+                )
+            } else {
+                check(false, "Expected refreshed LaunchAgent plist")
+            }
+
+            // Explicit false preference is respected on subsequent launches
+            store.launchAtLogin = false
+            mgr.syncOnLaunch(configStore: store)
+            check(!mgr.isEnabled, "syncOnLaunch removes plist and keeps autostart off when user disabled it")
         }
 
         print("\nResults: \(passedCount) passed, \(failedCount) failed")

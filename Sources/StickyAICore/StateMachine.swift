@@ -89,10 +89,12 @@ public struct StoredConfig: Codable, Equatable {
 
     public var frame: RectData?
     public var unfocusedAlpha: Double?
+    public var launchAtLogin: Bool?
 
-    public init(frame: RectData? = nil, unfocusedAlpha: Double? = nil) {
+    public init(frame: RectData? = nil, unfocusedAlpha: Double? = nil, launchAtLogin: Bool? = nil) {
         self.frame = frame
         self.unfocusedAlpha = unfocusedAlpha
+        self.launchAtLogin = launchAtLogin
     }
 }
 
@@ -197,6 +199,14 @@ public final class ConfigStore {
         }
         set {
             config.unfocusedAlpha = min(1.0, max(0.05, newValue))
+            save()
+        }
+    }
+
+    public var launchAtLogin: Bool? {
+        get { config.launchAtLogin }
+        set {
+            config.launchAtLogin = newValue
             save()
         }
     }

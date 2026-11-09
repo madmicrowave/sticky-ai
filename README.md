@@ -1,34 +1,34 @@
 <div align="center">
 
-<img src="./assets/banner.svg" alt="Sticky-AI (Sticky-AI.app / SAI) — Open-Source Native Google Gemini Desktop &amp; Menu Bar Application for macOS" width="100%" />
+<img src="./assets/banner.svg" alt="Sticky-AI (sticky-ai.app / SAI) — Open-Source Native Google Gemini Desktop &amp; Menu Bar Application for macOS" width="100%" />
 
-# Sticky-AI (`Sticky-AI.app` / `SAI`) — Native Google Gemini Desktop & Menu Bar App for macOS
+# Sticky-AI (`sticky-ai.app` / `SAI`) — Native Google Gemini Desktop & Menu Bar App for macOS
 
-**Free, open-source native Swift macOS application (`Sticky-AI.app`) that puts a crisp `SAI` badge next to your clock and summons an always-on-top floating Google Gemini assistant anywhere on your Mac with `Option + Space` (`⌥ + Space`).**
+**Free, open-source native Swift macOS application (`sticky-ai.app`) that puts a crisp `SAI` badge next to your clock, starts automatically at login, and summons an always-on-top floating Google Gemini assistant anywhere on your Mac with `Option + Space` (`⌥ + Space`).**
 
 [![CI](https://github.com/madmicrowave/sticky-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/madmicrowave/sticky-ai/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/madmicrowave/sticky-ai?label=Download%20Sticky-AI.app&logo=apple)](https://github.com/madmicrowave/sticky-ai/releases/latest)
+[![Release](https://img.shields.io/github/v/release/madmicrowave/sticky-ai?label=Download%20sticky-ai.app&logo=apple)](https://github.com/madmicrowave/sticky-ai/releases/latest)
 [![Platform: macOS 13+](https://img.shields.io/badge/Platform-macOS%2013%2B%20(Apple%20Silicon%20%26%20Intel)-000000?logo=apple&logoColor=white)](https://github.com/madmicrowave/sticky-ai)
 [![AI: Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
 [![Built with Swift](https://img.shields.io/badge/Built%20with-Native%20Swift-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](./LICENSE)
 [![Powered by DOMONK Factory](https://img.shields.io/badge/Powered%20by-DOMONK%20Factory-7c3aed)](https://domonk.com)
 
-[**Download `Sticky-AI.app`**](https://github.com/madmicrowave/sticky-ai/releases/latest) • [**Why Sticky-AI?**](#why-sticky-ai) • [**Key Features**](#key-features) • [**Shortcuts & Menu Bar**](#keyboard-shortcuts--menu-bar-controls) • [**FAQ**](#frequently-asked-questions-faq) • [**DOMONK Factory**](https://domonk.com)
+[**Download `sticky-ai.app`**](https://github.com/madmicrowave/sticky-ai/releases/latest) • [**Why Sticky-AI?**](#why-sticky-ai) • [**Key Features**](#key-features) • [**Shortcuts & Menu Bar**](#keyboard-shortcuts--menu-bar-controls) • [**FAQ**](#frequently-asked-questions-faq) • [**DOMONK Factory**](https://domonk.com)
 
 </div>
 
 ---
 
-**Sticky-AI (`Sticky-AI.app`)** is a lightweight, zero-dependency, **native macOS desktop and menu bar application for Google Gemini** (`https://gemini.google.com/app`), open-sourced under the MIT License by **[DOMONK Factory](https://domonk.com)**.
+**Sticky-AI (`sticky-ai.app`)** is a lightweight, zero-dependency, **native macOS desktop and menu bar application for Google Gemini** (`https://gemini.google.com/app`), open-sourced under the MIT License by **[DOMONK Factory](https://domonk.com)**.
 
-Press **`Option + Space` (`⌥ + Space`)** from **anywhere on macOS** — over Xcode, VS Code, Google Antigravity IDE, Terminal, Desktop Spaces, or full-screen apps — to toggle a compact floating Google Gemini panel with instant prompt auto-focus, smart `60%` glass translucency while unfocused, native Google Passkey/OAuth sign-in, and one-click file downloads to `~/Downloads`.
+Press **`Option + Space` (`⌥ + Space`)** from **anywhere on macOS** — over Xcode, VS Code, Google Antigravity IDE, Terminal, Desktop Spaces, or full-screen apps — to toggle a compact floating Google Gemini panel with instant prompt auto-focus, smart `60%` glass translucency while unfocused, built-in **Start Automatically at Login**, native Google Passkey/OAuth sign-in, and one-click file downloads to `~/Downloads`.
 
 ---
 
 ## Why Sticky-AI?
 
-| Capability | Sticky-AI (`Sticky-AI.app` — Native Swift) | Browser Tab | Electron / CEF Wrappers |
+| Capability | Sticky-AI (`sticky-ai.app` — Native Swift) | Browser Tab | Electron / CEF Wrappers |
 | :--- | :--- | :--- | :--- |
 | **Global `Option + Space` Shortcut** | ✅ Instant across all Spaces & fullscreen apps | ❌ Must hunt tabs/windows | ⚠️ Often requires Accessibility permissions |
 | **Google Account Sign-In & Passkeys** | ✅ Native Apple `WKWebView` (never blocked) | ✅ Works | ❌ Frequently blocked by Google security check |
@@ -60,32 +60,31 @@ Press **`Option + Space` (`⌥ + Space`)** from **anywhere on macOS** — over X
 
 ## Installation & Quick Start
 
-### Option A — Download Prebuilt `Sticky-AI.app` (macOS 13+)
+### Option A — Download Prebuilt `sticky-ai.app` (macOS 13+)
 
-Download **`Sticky-AI-macOS.zip`** from [**GitHub Releases**](https://github.com/madmicrowave/sticky-ai/releases/latest), unzip it, drag **`Sticky-AI.app`** into `/Applications`, and double-click **`Sticky-AI.app`**.
+Download **`sticky-ai-macOS.zip`** from [**GitHub Releases**](https://github.com/madmicrowave/sticky-ai/releases/latest), unzip it, drag **`sticky-ai.app`** into `/Applications`, and double-click **`sticky-ai.app`**.
 
 ### Option B — One-Command Build from Source (Xcode Command Line Tools)
 
 Requires **macOS 13.0 (Ventura) or newer** (Apple Silicon `M1`/`M2`/`M3`/`M4` & Intel) and `xcode-select --install`:
 
 ```bash
-git clone https://github.com/madmicrowave/sticky-ai.git && cd sticky-ai && zsh scripts/build-app.sh && cp -R ./Sticky-AI.app /Applications/ && open /Applications/Sticky-AI.app
+git clone https://github.com/madmicrowave/sticky-ai.git && cd sticky-ai && zsh scripts/build-app.sh && cp -R ./sticky-ai.app /Applications/ && open /Applications/sticky-ai.app
 ```
 
-*(Or inside the repo with npm: `npm start` builds `Sticky-AI.app` automatically if needed and launches it.)*
+*(Or inside the repo with npm: `npm start` builds `sticky-ai.app` automatically if needed and launches it.)*
 
 ---
 
 ## First-Time Google Gemini Sign-In
 
-1. Launch `Sticky-AI.app` (or press **`Option + Space`**).
+1. Launch `sticky-ai.app` (or press **`Option + Space`**).
 2. Click **Sign in** inside the Google Gemini window and complete your normal Google authentication (including Passkeys / 2-Step Verification).
 3. Cookies and session state are stored persistently in macOS `WKWebsiteDataStore` — Google Gemini stays signed in across window toggles and macOS restarts.
 
-### Start Automatically at macOS Login (Optional)
+### Start Automatically at macOS Login (Built-In Menu Bar Toggle)
 
-1. Open **System Settings → General → Login Items & Extensions**.
-2. Under **Open at Login**, click **`+`**, select `/Applications/Sticky-AI.app`, and click **Open**.
+`sticky-ai.app` includes a built-in **Start Automatically at Login** LaunchAgent (`~/Library/LaunchAgents/com.domonk.sticky-ai.plist`), enabled by default on first launch. Toggle it on or off anytime directly from **`SAI` (next to your clock) → `Start Automatically at Login`**.
 
 ---
 
@@ -101,6 +100,7 @@ Click the **`SAI`** badge next to your macOS clock at any time:
 | **Reload Page** | `Cmd + R` |
 | **Reset Window Size & Position** | Menu Bar → *Reset Window Size & Position* |
 | **Unfocused Opacity Presets** | `80%`, `60% (Default)`, `40%`, `20%` |
+| **Autostart at macOS Login** | Menu Bar → *Start Automatically at Login* (checkmark toggle) |
 | **About (`DOMONK Factory`)** | Menu Bar → *About* (opens **DOMONK Factory** panel with clickable link to [https://domonk.com](https://domonk.com)) |
 | **Quit Sticky-AI** | `Cmd + Q` |
 
@@ -116,7 +116,7 @@ Click the **`SAI`** badge next to your macOS clock at any time:
 <details>
 <summary><b>Is there a native Google Gemini desktop app for macOS?</b></summary>
 <br />
-Google does not currently ship a standalone native macOS desktop app for Gemini. <b>Sticky-AI (<code>Sticky-AI.app</code>)</b> fills that gap with a tiny, 100% open-source native Swift (<code>AppKit</code> + <code>WebKit</code>) menu bar and Spotlight-style <code>Option + Space</code> floating window.
+Google does not currently ship a standalone native macOS desktop app for Gemini. <b>Sticky-AI (<code>sticky-ai.app</code>)</b> fills that gap with a tiny, 100% open-source native Swift (<code>AppKit</code> + <code>WebKit</code>) menu bar and Spotlight-style <code>Option + Space</code> floating window.
 </details>
 
 <details>
@@ -141,6 +141,7 @@ sticky-ai/
 ├── Sources/
 │   ├── StickyAICore/
 │   │   ├── StickyAppController.swift          # Floating NSPanel, WKWebView session, OAuth popups, About & menu bar UI
+│   │   ├── LaunchAtLoginManager.swift         # macOS LaunchAgent (`com.domonk.sticky-ai`) autostart at login manager
 │   │   ├── StateMachine.swift                 # 3-state Option+Space transition logic, opacity & ConfigStore
 │   │   ├── HotKeyManager.swift                # Carbon HIToolbox global Option+Space hotkey registration
 │   │   ├── FocusInput.swift                   # Resilient DOM prompt-input auto-focus & caret placement
@@ -149,9 +150,9 @@ sticky-ai/
 │       └── main.swift                         # Native macOS NSApplication entrypoint
 ├── Resources/                                 # AppIcon.icns & MenuBarIcon.png
 ├── Tests/
-│   └── TestMain.swift                         # Automated test suite for state machine, config, focus & downloads
+│   └── TestMain.swift                         # Automated test suite for state machine, autostart, focus & downloads
 ├── scripts/
-│   ├── build-app.sh                           # Standalone `Sticky-AI.app` builder & ad-hoc codesigner
+│   ├── build-app.sh                           # Standalone `sticky-ai.app` builder & ad-hoc codesigner
 │   └── run-tests.sh                           # Compiles & runs automated Swift test suite
 ├── assets/
 │   └── banner.svg                             # Project hero preview

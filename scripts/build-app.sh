@@ -2,12 +2,12 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP_PATH="$PROJECT_ROOT/Sticky-AI.app"
+APP_PATH="$PROJECT_ROOT/sticky-ai.app"
 CONTENTS_DIR="$APP_PATH/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 
-rm -rf "$APP_PATH" "$PROJECT_ROOT/Sticky AI.app" "$PROJECT_ROOT/.build"
+rm -rf "$PROJECT_ROOT/Sticky-AI.app" "$APP_PATH" "$PROJECT_ROOT/Sticky AI.app" "$PROJECT_ROOT/.build"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
 if [ -d "$PROJECT_ROOT/Resources" ]; then
@@ -30,15 +30,15 @@ cat > "$CONTENTS_DIR/Info.plist" <<'EOF'
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key>
-  <string>Sticky-AI</string>
+  <string>sticky-ai</string>
   <key>CFBundleDisplayName</key>
-  <string>Sticky-AI</string>
+  <string>sticky-ai</string>
   <key>CFBundleIdentifier</key>
   <string>com.domonk.sticky-ai</string>
   <key>CFBundleVersion</key>
-  <string>2.1.0</string>
+  <string>2.2.0</string>
   <key>CFBundleShortVersionString</key>
-  <string>2.1.0</string>
+  <string>2.2.0</string>
   <key>CFBundleExecutable</key>
   <string>StickyAI</string>
   <key>CFBundlePackageType</key>

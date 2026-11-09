@@ -13,10 +13,10 @@ Thank you for your interest in contributing to **Sticky-AI** — the open-source
    ```bash
    zsh scripts/run-tests.sh
    ```
-3. Build and launch `Sticky-AI.app`:
+3. Build and launch `sticky-ai.app`:
    ```bash
    zsh scripts/build-app.sh
-   open ./Sticky-AI.app
+   open ./sticky-ai.app
    ```
 
 ## Pull Request Guidelines
