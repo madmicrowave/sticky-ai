@@ -698,6 +698,19 @@ struct StickyAITestRunner {
                 evaluateString(controller.webView, "document.getElementById('gemini-prompt') ? 'READY' : ''") == "READY",
                 "WebContent reloaded silently in background while hidden so next open is already rendered"
             )
+
+            // Verify Menu Bar Dropdown 'About' option opens DOMONK Factory window with https://domonk.com
+            let dropdownMenu = controller.buildStatusMenu()
+            let aboutItem = dropdownMenu.items.first(where: { $0.title == "About" })
+            check(aboutItem != nil, "Status menu bar dropdown contains 'About' item")
+            controller.showAboutWindow()
+            check(controller.aboutWindow != nil && controller.aboutWindow?.isVisible == true, "About window opens when triggered")
+            check(controller.aboutWindow?.title.contains("DOMONK Factory") == true, "About window displays DOMONK Factory")
+            check(StickyAppController.domonkFactoryURL.absoluteString == "https://domonk.com", "About window links to https://domonk.com")
+            if let aboutWin = controller.aboutWindow {
+                _ = controller.windowShouldClose(aboutWin)
+            }
+            check(controller.aboutWindow?.isVisible == false, "About window closes cleanly without quitting Sticky-AI")
         }
 
         print("\nResults: \(passedCount) passed, \(failedCount) failed")

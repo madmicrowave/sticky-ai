@@ -100,6 +100,7 @@ Click the **Sticky-AI** icon in the top-right macOS menu bar at any time:
 | **Reload Page** | `Cmd + R` |
 | **Reset Window Size & Position** | Menu Bar → *Reset Window Size & Position* |
 | **Unfocused Opacity Presets** | `80%`, `60% (Default)`, `40%`, `20%` |
+| **About (`DOMONK Factory`)** | Menu Bar → *About* (opens **DOMONK Factory** info & link to [https://domonk.com](https://domonk.com)) |
 | **Quit Sticky-AI** | `Cmd + Q` |
 
 ### Optional Environment Overrides

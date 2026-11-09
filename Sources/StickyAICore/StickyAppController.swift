@@ -15,6 +15,9 @@ public final class StickyPanel: NSPanel {
 }
 
 public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
+    public static let domonkFactoryName = "DOMONK Factory"
+    public static let domonkFactoryURL = URL(string: "https://domonk.com")!
+
     public let configStore: ConfigStore
     public let downloadsDirectoryURL: URL
     public let panel: StickyPanel
@@ -41,6 +44,8 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
     private var lastVisibleFrame: CGRect
 
     private var statusItem: NSStatusItem?
+    public private(set) var statusMenu: NSMenu?
+    public private(set) var aboutWindow: NSPanel?
     private var childWindows: [ObjectIdentifier: NSPanel] = [:]
     private var committedChildWebViews: Set<ObjectIdentifier> = []
     private var activeDownloads: [ObjectIdentifier: ActiveDownloadContext] = [:]
@@ -487,6 +492,10 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
             hideWindow()
             return false
         }
+        if sender === aboutWindow && !isQuitting {
+            aboutWindow?.orderOut(nil)
+            return false
+        }
         return true
     }
 
@@ -768,6 +777,8 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         mainMenu.addItem(appMenuItem)
         let appMenu = NSMenu()
         appMenuItem.submenu = appMenu
+        appMenu.addItem(withTitle: "About Sticky-AI", action: #selector(menuAbout), keyEquivalent: "").target = self
+        appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Toggle Sticky-AI (⌥Space)", action: #selector(menuToggle), keyEquivalent: "").target = self
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Hide Sticky-AI", action: #selector(menuHide), keyEquivalent: "h").target = self
@@ -831,8 +842,8 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         rebuildStatusMenu()
     }
 
-    private func rebuildStatusMenu() {
-        guard let statusItem else { return }
+    @discardableResult
+    public func buildStatusMenu() -> NSMenu {
         let menu = NSMenu()
 
         menu.addItem(withTitle: "Toggle Sticky-AI (⌥Space)", action: #selector(menuToggle), keyEquivalent: "").target = self
@@ -862,9 +873,110 @@ public final class StickyAppController: NSObject, NSWindowDelegate, WKNavigation
         menu.addItem(alphaParent)
 
         menu.addItem(.separator())
+        menu.addItem(withTitle: "About", action: #selector(menuAbout), keyEquivalent: "").target = self
+        menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Sticky-AI", action: #selector(menuQuit), keyEquivalent: "q").target = self
 
-        statusItem.menu = menu
+        self.statusMenu = menu
+        return menu
+    }
+
+    private func rebuildStatusMenu() {
+        let menu = buildStatusMenu()
+        statusItem?.menu = menu
+    }
+
+    @objc public func showAboutWindow() {
+        if aboutWindow == nil {
+            let winRect = NSRect(x: 0, y: 0, width: 390, height: 290)
+            let win = NSPanel(
+                contentRect: winRect,
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            win.title = "About Sticky-AI — \(Self.domonkFactoryName)"
+            win.level = .modalPanel
+            win.hidesOnDeactivate = false
+            win.isReleasedWhenClosed = false
+            win.delegate = self
+
+            let container = NSView(frame: winRect)
+
+            let iconView = NSImageView(frame: NSRect(x: (390 - 68) / 2, y: 196, width: 68, height: 68))
+            if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+               let iconImg = NSImage(contentsOf: iconURL) {
+                iconView.image = iconImg
+            } else {
+                iconView.image = NSApp.applicationIconImage
+            }
+            iconView.imageScaling = .scaleProportionallyUpOrDown
+            container.addSubview(iconView)
+
+            let titleField = NSTextField(labelWithString: "Sticky-AI")
+            titleField.font = NSFont.systemFont(ofSize: 16.5, weight: .bold)
+            titleField.alignment = .center
+            titleField.frame = NSRect(x: 20, y: 164, width: 350, height: 24)
+            container.addSubview(titleField)
+
+            let version = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "2.1.0"
+            let versionField = NSTextField(labelWithString: "Version \(version)")
+            versionField.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .medium)
+            versionField.textColor = .secondaryLabelColor
+            versionField.alignment = .center
+            versionField.frame = NSRect(x: 20, y: 142, width: 350, height: 18)
+            container.addSubview(versionField)
+
+            let descField = NSTextField(labelWithString: "Always-on-top Google Gemini companion for macOS (⌥Space)")
+            descField.font = NSFont.systemFont(ofSize: 11.5)
+            descField.textColor = .secondaryLabelColor
+            descField.alignment = .center
+            descField.frame = NSRect(x: 20, y: 118, width: 350, height: 18)
+            container.addSubview(descField)
+
+            let sep = NSBox(frame: NSRect(x: 28, y: 102, width: 334, height: 1))
+            sep.boxType = .separator
+            container.addSubview(sep)
+
+            let factoryLabel = NSTextField(labelWithString: Self.domonkFactoryName)
+            factoryLabel.font = NSFont.systemFont(ofSize: 14, weight: .bold)
+            factoryLabel.alignment = .center
+            factoryLabel.frame = NSRect(x: 20, y: 68, width: 350, height: 22)
+            container.addSubview(factoryLabel)
+
+            let linkButton = NSButton(
+                title: "🌐 https://domonk.com ↗",
+                target: self,
+                action: #selector(openDomonkWebsite)
+            )
+            linkButton.bezelStyle = .rounded
+            linkButton.keyEquivalent = "\r"
+            linkButton.font = NSFont.systemFont(ofSize: 12.5, weight: .semibold)
+            linkButton.frame = NSRect(x: (390 - 210) / 2, y: 26, width: 210, height: 32)
+            container.addSubview(linkButton)
+
+            win.contentView = container
+            win.center()
+            self.aboutWindow = win
+        } else {
+            aboutWindow?.center()
+        }
+
+        if #available(macOS 14.0, *) {
+            NSApp.activate()
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        aboutWindow?.orderFrontRegardless()
+        aboutWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    @objc private func menuAbout() {
+        showAboutWindow()
+    }
+
+    @objc private func openDomonkWebsite() {
+        NSWorkspace.shared.open(Self.domonkFactoryURL)
     }
 
     @objc private func menuToggle() {
