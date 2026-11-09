@@ -9,3 +9,4 @@
 ## Reporting a Vulnerability
 
 If you discover a security issue, please report it responsibly via [GitHub Security Advisories](https://github.com/madmicrowave/sticky-ai/security/advisories/new) rather than opening a public issue.
+

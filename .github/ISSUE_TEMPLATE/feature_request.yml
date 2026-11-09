@@ -10,3 +10,4 @@ body:
       description: What capability or shortcut would make Sticky-AI even more useful on macOS?
     validations:
       required: true
+

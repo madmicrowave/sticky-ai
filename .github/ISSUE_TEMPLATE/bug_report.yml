@@ -17,3 +17,4 @@ body:
       description: Describe the issue and steps to reproduce it.
     validations:
       required: true
+

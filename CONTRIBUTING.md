@@ -24,3 +24,4 @@ Thank you for your interest in contributing to **Sticky-AI** — the open-source
 - Keep Sticky-AI **zero-dependency** (pure Swift `AppKit`, `WebKit`, and Carbon `HIToolbox`).
 - Ensure `zsh scripts/run-tests.sh` and `zsh scripts/build-app.sh` pass cleanly before opening a PR.
 - Add unit tests in `Tests/TestMain.swift` when modifying hotkey state transitions, frame clamping, or download handling.
+
