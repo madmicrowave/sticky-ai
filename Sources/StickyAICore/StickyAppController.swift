@@ -63,6 +63,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
     private var isLogicallyHidden = false
     private var isTransitioningVisibility = false
     private let initialURL: URL
+    private let isHeadlessTestMode = ProcessInfo.processInfo.environment["STICKY_AI_HEADLESS_TEST"] == "1"
 
     public init(
         configStore: ConfigStore = ConfigStore(),
@@ -376,13 +377,17 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         panel.level = .floating
         isTransitioningVisibility = false
 
-        if #available(macOS 14.0, *) {
-            NSApp.activate()
+        if isHeadlessTestMode {
+            panel.orderBack(nil)
         } else {
-            NSApp.activate(ignoringOtherApps: true)
+            if #available(macOS 14.0, *) {
+                NSApp.activate()
+            } else {
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            panel.makeKeyAndOrderFront(nil)
+            panel.orderFrontRegardless()
         }
-        panel.makeKeyAndOrderFront(nil)
-        panel.orderFrontRegardless()
 
         if webView.url == nil && !webView.isLoading {
             showSnapshotShieldIfAvailable()
@@ -426,21 +431,23 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         panel.resignKey()
         isTransitioningVisibility = false
 
-        if let prev = previousExternalApp, !prev.isTerminated {
-            if #available(macOS 14.0, *) {
-                prev.activate()
+        if !isHeadlessTestMode {
+            if let prev = previousExternalApp, !prev.isTerminated {
+                if #available(macOS 14.0, *) {
+                    prev.activate()
+                } else {
+                    prev.activate(options: [.activateIgnoringOtherApps])
+                }
+            } else if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first,
+                      !finder.isTerminated {
+                if #available(macOS 14.0, *) {
+                    finder.activate()
+                } else {
+                    finder.activate(options: [.activateIgnoringOtherApps])
+                }
             } else {
-                prev.activate(options: [.activateIgnoringOtherApps])
+                NSApp.deactivate()
             }
-        } else if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first,
-                  !finder.isTerminated {
-            if #available(macOS 14.0, *) {
-                finder.activate()
-            } else {
-                finder.activate(options: [.activateIgnoringOtherApps])
-            }
-        } else {
-            NSApp.deactivate()
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
@@ -1007,6 +1014,12 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
             self.aboutWindow = win
         } else {
             aboutWindow?.center()
+        }
+
+        if isHeadlessTestMode {
+            aboutWindow?.setFrameOrigin(NSPoint(x: -12000, y: -12000))
+            aboutWindow?.orderBack(nil)
+            return
         }
 
         if #available(macOS 14.0, *) {

@@ -161,6 +161,7 @@ private func evaluateString(_ webView: WKWebView, _ js: String) -> String? {
 struct StickyAITestRunner {
     static func main() {
         setenv("STICKY_AI_DISABLE_AUTO_LAUNCH_AGENT", "1", 1)
+        setenv("STICKY_AI_HEADLESS_TEST", "1", 1)
         print("Running Sticky-AI Test Suite...\n")
 
         runTest("1. Option+Space state machine transitions match all rules") {
