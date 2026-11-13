@@ -918,6 +918,22 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         }
     }
 
+    /// Multi-monitor confinement: ensures the status dropdown menu is strictly confined
+    /// to the screen where the status item was clicked, preventing cross-display placement anomalies.
+    public func confinementRect(for menu: NSMenu, on screen: NSScreen?) -> NSRect {
+        let mouseLocation = NSEvent.mouseLocation
+        if let targetScreen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }) {
+            return targetScreen.visibleFrame
+        }
+        if let screen = screen {
+            return screen.visibleFrame
+        }
+        if let buttonScreen = statusItem?.button?.window?.screen {
+            return buttonScreen.visibleFrame
+        }
+        return .zero
+    }
+
     @discardableResult
     public func setLaunchAtLogin(_ enabled: Bool) -> Bool {
         let updated = (try? launchAtLoginManager.setEnabled(enabled)) ?? launchAtLoginManager.isEnabled
