@@ -918,18 +918,29 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         }
     }
 
+    /// Multi-monitor target screen discovery: uses `NSMouseInRect` with edge-tolerance expansion
+    /// to accurately resolve which display the user clicked next to the clock/menu bar.
+    public func targetScreenForMenu(at mouseLocation: NSPoint = NSEvent.mouseLocation) -> NSScreen? {
+        if let directMatch = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }) {
+            return directMatch
+        }
+        if let nearMatch = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame.insetBy(dx: -4, dy: -4), false) }) {
+            return nearMatch
+        }
+        if let buttonScreen = statusItem?.button?.window?.screen {
+            return buttonScreen
+        }
+        return NSScreen.main
+    }
+
     /// Multi-monitor confinement: ensures the status dropdown menu is strictly confined
     /// to the screen where the status item was clicked, preventing cross-display placement anomalies.
     public func confinementRect(for menu: NSMenu, on screen: NSScreen?) -> NSRect {
-        let mouseLocation = NSEvent.mouseLocation
-        if let targetScreen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }) {
+        if let targetScreen = targetScreenForMenu() {
             return targetScreen.visibleFrame
         }
         if let screen = screen {
             return screen.visibleFrame
-        }
-        if let buttonScreen = statusItem?.button?.window?.screen {
-            return buttonScreen.visibleFrame
         }
         return .zero
     }
