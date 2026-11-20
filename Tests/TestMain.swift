@@ -746,9 +746,13 @@ struct StickyAITestRunner {
 
             let aboutItem = dropdownMenu.items.first(where: { $0.title == "About" })
             check(aboutItem != nil, "Status menu bar dropdown contains 'About' item")
+            check(dropdownMenu.items.first(where: { $0.title == "Focus Message Input" }) == nil, "Menu does not contain removed 'Focus Message Input'")
+            check(dropdownMenu.items.first(where: { $0.title == "Open Gemini Home" }) == nil, "Menu does not contain removed 'Open Gemini Home'")
             controller.showAboutWindow()
             check(controller.aboutWindow != nil && controller.aboutWindow?.isVisible == true, "About window opens when triggered")
             check(controller.aboutWindow?.title.contains("DOMONK Factory") == true, "About window displays DOMONK Factory")
+            check(controller.aboutWindow?.title.contains("About Sticky AI") == true, "About window title uses 'Sticky AI' without dash")
+            check(!(controller.aboutWindow?.title.contains("Sticky-AI") ?? false), "About window title contains no dash in Sticky AI")
             check(StickyAppController.domonkFactoryURL.absoluteString == "https://domonk.com", "About window links to https://domonk.com")
             if let aboutWin = controller.aboutWindow {
                 _ = controller.windowShouldClose(aboutWin)

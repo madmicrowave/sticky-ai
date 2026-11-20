@@ -789,7 +789,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         let appMenu = NSMenu()
         appMenu.delegate = self
         appMenuItem.submenu = appMenu
-        appMenu.addItem(withTitle: "About Sticky-AI", action: #selector(menuAbout), keyEquivalent: "").target = self
+        appMenu.addItem(withTitle: "About Sticky AI", action: #selector(menuAbout), keyEquivalent: "").target = self
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Toggle Sticky-AI (⌥Space)", action: #selector(menuToggle), keyEquivalent: "").target = self
         let appLaunchItem = NSMenuItem(
@@ -824,7 +824,6 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         let viewMenu = NSMenu(title: "View")
         viewMenuItem.submenu = viewMenu
         viewMenu.addItem(withTitle: "Reload Gemini", action: #selector(menuReload), keyEquivalent: "r").target = self
-        viewMenu.addItem(withTitle: "Open Gemini Home", action: #selector(menuHome), keyEquivalent: "H").target = self
 
         // Window Menu
         let windowMenuItem = NSMenuItem()
@@ -868,9 +867,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         menu.delegate = self
 
         menu.addItem(withTitle: "Toggle Sticky-AI (⌥Space)", action: #selector(menuToggle), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "Focus Message Input", action: #selector(menuFocusInput), keyEquivalent: "").target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Open Gemini Home", action: #selector(menuHome), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Reload Page", action: #selector(menuReload), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Reset Window Size & Position", action: #selector(menuResetBounds), keyEquivalent: "").target = self
 
@@ -976,7 +973,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
                 backing: .buffered,
                 defer: false
             )
-            win.title = "About Sticky-AI — \(Self.domonkFactoryName)"
+            win.title = "About Sticky AI — \(Self.domonkFactoryName)"
             win.level = .modalPanel
             win.hidesOnDeactivate = false
             win.isReleasedWhenClosed = false
@@ -994,7 +991,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
             iconView.imageScaling = .scaleProportionallyUpOrDown
             container.addSubview(iconView)
 
-            let titleField = NSTextField(labelWithString: "Sticky-AI")
+            let titleField = NSTextField(labelWithString: "Sticky AI")
             titleField.font = NSFont.systemFont(ofSize: 16.5, weight: .bold)
             titleField.alignment = .center
             titleField.frame = NSRect(x: 20, y: 164, width: 350, height: 24)

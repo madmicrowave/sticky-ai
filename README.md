@@ -95,8 +95,6 @@ Click the **`SAI`** badge next to your macOS clock at any time:
 | Action | Shortcut / Menu Item |
 | :--- | :--- |
 | **Show / Focus / Hide Sticky-AI** | `Option + Space` (`⌥Space`) — global across macOS |
-| **Focus Google Gemini Input** | Menu Bar → *Focus Message Input* |
-| **Open Gemini Home** | Menu Bar → *Open Gemini Home* (`https://gemini.google.com/app`) |
 | **Reload Page** | `Cmd + R` |
 | **Reset Window Size & Position** | Menu Bar → *Reset Window Size & Position* |
 | **Unfocused Opacity Presets** | `80%`, `60% (Default)`, `40%`, `20%` |
