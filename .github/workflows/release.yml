@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Build & Publish sticky-ai.app
+    name: Build & Publish sai.app
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -19,14 +19,14 @@ jobs:
       - name: Run automated tests
         run: zsh scripts/run-tests.sh
 
-      - name: Build sticky-ai.app
+      - name: Build sai.app
         run: zsh scripts/build-app.sh
 
-      - name: Package sticky-ai-macOS.zip
-        run: ditto -c -k --sequesterRsrc --keepParent sticky-ai.app sticky-ai-macOS.zip
+      - name: Package sai-macOS.zip
+        run: ditto -c -k --sequesterRsrc --keepParent sai.app sai-macOS.zip
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: sticky-ai-macOS.zip
+          files: sai-macOS.zip
           generate_release_notes: true

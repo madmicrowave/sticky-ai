@@ -628,7 +628,7 @@ struct StickyAITestRunner {
             let launchDir = tempDir.appendingPathComponent("LaunchAgents", isDirectory: true)
             let launchMgr = LaunchAtLoginManager(
                 launchAgentsDirectory: launchDir,
-                executablePathProvider: { "/Applications/sticky-ai.app/Contents/MacOS/StickyAI" }
+                executablePathProvider: { "/Applications/sai.app/Contents/MacOS/StickyAI" }
             )
             let customFrame = CGRect(x: 180, y: 140, width: 460, height: 590)
             store.setWindowFrame(customFrame)
@@ -722,8 +722,8 @@ struct StickyAITestRunner {
                 check(plist["Label"] as? String == "com.domonk.sticky-ai", "LaunchAgent Label is com.domonk.sticky-ai")
                 check(plist["RunAtLoad"] as? Bool == true, "LaunchAgent RunAtLoad == true")
                 check(
-                    plist["ProgramArguments"] as? [String] == ["/Applications/sticky-ai.app/Contents/MacOS/StickyAI"],
-                    "LaunchAgent ProgramArguments points to sticky-ai.app binary"
+                    plist["ProgramArguments"] as? [String] == ["/Applications/sai.app/Contents/MacOS/StickyAI"],
+                    "LaunchAgent ProgramArguments points to sai.app binary"
                 )
             } else {
                 check(false, "Expected valid XML LaunchAgent plist at \(launchMgr.plistURL.path)")
@@ -782,14 +782,14 @@ struct StickyAITestRunner {
             mgr.syncOnLaunch(configStore: store)
             check(mgr.isEnabled && store.launchAtLogin == true, "First launch enables LaunchAgent automatically")
 
-            // Simulate app rename/move to sticky-ai.app -> syncOnLaunch refreshes ProgramArguments path
-            currentExec = "/Applications/sticky-ai.app/Contents/MacOS/StickyAI"
+            // Simulate app rename/move to sai.app -> syncOnLaunch refreshes ProgramArguments path
+            currentExec = "/Applications/sai.app/Contents/MacOS/StickyAI"
             mgr.syncOnLaunch(configStore: store)
             if let data = try? Data(contentsOf: mgr.plistURL),
                let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] {
                 check(
-                    plist["ProgramArguments"] as? [String] == ["/Applications/sticky-ai.app/Contents/MacOS/StickyAI"],
-                    "syncOnLaunch refreshes executable path after rename to sticky-ai.app"
+                    plist["ProgramArguments"] as? [String] == ["/Applications/sai.app/Contents/MacOS/StickyAI"],
+                    "syncOnLaunch refreshes executable path after rename to sai.app"
                 )
             } else {
                 check(false, "Expected refreshed LaunchAgent plist")

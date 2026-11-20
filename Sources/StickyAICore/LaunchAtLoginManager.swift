@@ -27,6 +27,7 @@ public final class LaunchAtLoginManager {
             return bundleExec
         }
         let candidates = [
+            "/Applications/sai.app/Contents/MacOS/StickyAI",
             "/Applications/sticky-ai.app/Contents/MacOS/StickyAI",
             "/Applications/Sticky-AI.app/Contents/MacOS/StickyAI"
         ]
@@ -37,7 +38,7 @@ public final class LaunchAtLoginManager {
            FileManager.default.isExecutableFile(atPath: bundleExec) {
             return bundleExec
         }
-        return "/Applications/sticky-ai.app/Contents/MacOS/StickyAI"
+        return "/Applications/sai.app/Contents/MacOS/StickyAI"
     }
 
     public var isEnabled: Bool {
@@ -74,7 +75,7 @@ public final class LaunchAtLoginManager {
         }
         if let explicitPref = configStore.launchAtLogin {
             if explicitPref {
-                // Refresh executable path in case sticky-ai.app was renamed or moved to /Applications
+                // Refresh executable path in case sai.app was renamed or moved to /Applications
                 _ = try? setEnabled(true)
             } else if isEnabled {
                 _ = try? setEnabled(false)
