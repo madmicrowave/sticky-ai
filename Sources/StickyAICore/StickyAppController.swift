@@ -793,7 +793,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Toggle Sticky-AI (⌥Space)", action: #selector(menuToggle), keyEquivalent: "").target = self
         let appLaunchItem = NSMenuItem(
-            title: "Start Automatically at Login",
+            title: "Launch at Startup",
             action: #selector(menuToggleLaunchAtLogin),
             keyEquivalent: ""
         )
@@ -896,7 +896,7 @@ public final class StickyAppController: NSObject, NSWindowDelegate, NSMenuDelega
         menu.addItem(.separator())
 
         let launchItem = NSMenuItem(
-            title: "Start Automatically at Login",
+            title: "Launch at Startup",
             action: #selector(menuToggleLaunchAtLogin),
             keyEquivalent: ""
         )

@@ -22,7 +22,7 @@
 
 **Sticky-AI (`sticky-ai.app`)** is a lightweight, zero-dependency, **native macOS desktop and menu bar application for Google Gemini** (`https://gemini.google.com/app`), open-sourced under the MIT License by **[DOMONK Factory](https://domonk.com)**.
 
-Press **`Option + Space` (`⌥ + Space`)** from **anywhere on macOS** — over Xcode, VS Code, Google Antigravity IDE, Terminal, Desktop Spaces, or full-screen apps — to toggle a compact floating Google Gemini panel with instant prompt auto-focus, smart `60%` glass translucency while unfocused, built-in **Start Automatically at Login**, native Google Passkey/OAuth sign-in, and one-click file downloads to `~/Downloads`.
+Press **`Option + Space` (`⌥ + Space`)** from **anywhere on macOS** — over Xcode, VS Code, Google Antigravity IDE, Terminal, Desktop Spaces, or full-screen apps — to toggle a compact floating Google Gemini panel with instant prompt auto-focus, smart `60%` glass translucency while unfocused, built-in **Launch at Startup**, native Google Passkey/OAuth sign-in, and one-click file downloads to `~/Downloads`.
 
 ---
 
@@ -82,9 +82,9 @@ git clone https://github.com/madmicrowave/sticky-ai.git && cd sticky-ai && zsh s
 2. Click **Sign in** inside the Google Gemini window and complete your normal Google authentication (including Passkeys / 2-Step Verification).
 3. Cookies and session state are stored persistently in macOS `WKWebsiteDataStore` — Google Gemini stays signed in across window toggles and macOS restarts.
 
-### Start Automatically at macOS Login (Built-In Menu Bar Toggle)
+### Launch at macOS Startup (Built-In Menu Bar Toggle)
 
-`sticky-ai.app` includes a built-in **Start Automatically at Login** LaunchAgent (`~/Library/LaunchAgents/com.domonk.sticky-ai.plist`), enabled by default on first launch. Toggle it on or off anytime directly from **`SAI` (next to your clock) → `Start Automatically at Login`**.
+`sticky-ai.app` includes a built-in **Launch at Startup** LaunchAgent (`~/Library/LaunchAgents/com.domonk.sticky-ai.plist`), enabled by default on first launch. Toggle it on or off anytime directly from **`SAI` (next to your clock) → `Launch at Startup`**.
 
 ---
 
@@ -100,7 +100,7 @@ Click the **`SAI`** badge next to your macOS clock at any time:
 | **Reload Page** | `Cmd + R` |
 | **Reset Window Size & Position** | Menu Bar → *Reset Window Size & Position* |
 | **Unfocused Opacity Presets** | `80%`, `60% (Default)`, `40%`, `20%` |
-| **Autostart at macOS Login** | Menu Bar → *Start Automatically at Login* (checkmark toggle) |
+| **Autostart at macOS Login** | Menu Bar → *Launch at Startup* (checkmark toggle) |
 | **About (`DOMONK Factory`)** | Menu Bar → *About* (opens **DOMONK Factory** panel with clickable link to [https://domonk.com](https://domonk.com)) |
 | **Quit Sticky-AI** | `Cmd + Q` |
 

@@ -707,10 +707,10 @@ struct StickyAITestRunner {
                 "WebContent reloaded silently in background while hidden so next open is already rendered"
             )
 
-            // Verify Menu Bar Dropdown 'Start Automatically at Login' & 'About' options
+            // Verify Menu Bar Dropdown 'Launch at Startup' & 'About' options
             var dropdownMenu = controller.buildStatusMenu()
-            let initialLaunchItem = dropdownMenu.items.first(where: { $0.title == "Start Automatically at Login" })
-            check(initialLaunchItem != nil, "Status menu bar dropdown contains 'Start Automatically at Login' item")
+            let initialLaunchItem = dropdownMenu.items.first(where: { $0.title == "Launch at Startup" })
+            check(initialLaunchItem != nil, "Status menu bar dropdown contains 'Launch at Startup' item")
             check(initialLaunchItem?.state == .off, "Launch at login initially off in isolated test directory")
 
             // Enable autostart via toggleLaunchAtLogin()
@@ -730,7 +730,7 @@ struct StickyAITestRunner {
             }
             dropdownMenu = controller.buildStatusMenu()
             check(
-                dropdownMenu.items.first(where: { $0.title == "Start Automatically at Login" })?.state == .on,
+                dropdownMenu.items.first(where: { $0.title == "Launch at Startup" })?.state == .on,
                 "Menu bar checkmark updates to .on when autostart is enabled"
             )
 
@@ -740,7 +740,7 @@ struct StickyAITestRunner {
             check(store.launchAtLogin == false, "ConfigStore persists launchAtLogin == false")
             dropdownMenu = controller.buildStatusMenu()
             check(
-                dropdownMenu.items.first(where: { $0.title == "Start Automatically at Login" })?.state == .off,
+                dropdownMenu.items.first(where: { $0.title == "Launch at Startup" })?.state == .off,
                 "Menu bar checkmark updates to .off when autostart is disabled"
             )
 
